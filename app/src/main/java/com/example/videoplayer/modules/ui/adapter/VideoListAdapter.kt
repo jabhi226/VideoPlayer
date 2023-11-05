@@ -31,7 +31,7 @@ class VideoListAdapter(private val moveToNextVideo: (Int) -> Unit) :
     }) {
 
 
-    inner class VideoVH(private val binding: ItemVideoBinding) :
+    inner class VideoVH(binding: ItemVideoBinding) :
         RecyclerView.ViewHolder(binding.root) {
         private var player: ExoPlayer? = null
         private var mediaItem: MediaItem? = null
