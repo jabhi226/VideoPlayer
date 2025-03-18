@@ -1,4 +1,4 @@
-package com.example.videoplayer.modules.ui.adapter
+package com.example.videoplayer.utils.view.recyclerView
 
 import androidx.recyclerview.widget.RecyclerView
 import androidx.recyclerview.widget.SnapHelper

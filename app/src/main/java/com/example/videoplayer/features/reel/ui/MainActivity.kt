@@ -1,7 +1,6 @@
-package com.example.videoplayer.modules.ui
+package com.example.videoplayer.features.reel.ui
 
 import android.os.Bundle
-import android.os.Handler
 import androidx.activity.viewModels
 import androidx.appcompat.app.AppCompatActivity
 import androidx.databinding.DataBindingUtil
@@ -10,9 +9,8 @@ import androidx.recyclerview.widget.LinearLayoutManager
 import androidx.recyclerview.widget.PagerSnapHelper
 import com.example.videoplayer.R
 import com.example.videoplayer.databinding.ActivityMainBinding
-import com.example.videoplayer.modules.ui.adapter.SpacePagerSnapHelper
-import com.example.videoplayer.modules.ui.adapter.VideoListAdapter
-import com.example.videoplayer.modules.viewModel.VideoListViewModel
+import com.example.videoplayer.utils.view.recyclerView.SpacePagerSnapHelper
+import com.example.videoplayer.features.reel.viewModel.VideoListViewModel
 import dagger.hilt.android.AndroidEntryPoint
 import kotlinx.coroutines.flow.collectLatest
 import kotlinx.coroutines.launch
@@ -22,7 +20,6 @@ class MainActivity : AppCompatActivity() {
 
     private lateinit var binding: ActivityMainBinding
     private val viewModel by viewModels<VideoListViewModel>()
-    private val layoutManager: LinearLayoutManager? = null
 
     private val adapter =
         VideoListAdapter { absoluteAdapterPosition ->

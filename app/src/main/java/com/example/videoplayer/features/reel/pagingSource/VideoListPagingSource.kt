@@ -1,9 +1,9 @@
-package com.example.videoplayer.modules.ui.adapter
+package com.example.videoplayer.features.reel.pagingSource
 
 import androidx.paging.PagingSource
 import androidx.paging.PagingState
-import com.example.videoplayer.modules.models.Video
-import com.example.videoplayer.modules.repository.VideoListRepository
+import com.example.videoplayer.data.local.entities.Video
+import com.example.videoplayer.domain.repository.VideoListRepository
 import java.lang.Exception
 
 class VideoListPagingSource(
@@ -36,7 +36,7 @@ class VideoListPagingSource(
         }
     }
 
-    private suspend fun getVideos(): List<Video> {
+    private fun getVideos(): List<Video> {
         return repository.getVideos()
     }
 }

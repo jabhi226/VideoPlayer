@@ -27,7 +27,13 @@ android {
         }
     }
 
+    composeOptions {
+        kotlinCompilerExtensionVersion = '1.4.1'
+//        kotlinCompilerVersion = "1.8.0" // Match your Kotlin version
+    }
+
     buildFeatures {
+        compose true // Enable Compose support
         dataBinding true
     }
 
@@ -35,7 +41,7 @@ android {
         sourceCompatibility JavaVersion.VERSION_17
         targetCompatibility JavaVersion.VERSION_17
     }
-    
+
     kotlinOptions {
         jvmTarget = '17'
     }
@@ -74,10 +80,27 @@ dependencies {
     implementation 'com.intuit.ssp:ssp-android:1.0.6'
 
     // exoplayer
-    implementation'com.google.android.exoplayer:exoplayer:2.19.1'
-    implementation 'com.google.android.exoplayer:exoplayer-ui:2.19.1'
+//    implementation'com.google.android.exoplayer:exoplayer:2.19.1'
+//    implementation 'com.google.android.exoplayer:exoplayer-ui:2.19.1'
+
+    // media3-exoplayer
+    implementation 'androidx.media3:media3-exoplayer:1.4.1'
+    implementation 'androidx.media3:media3-ui:1.4.1'
 
     // pagination
     implementation "androidx.paging:paging-runtime-ktx:3.2.1"
     testImplementation "androidx.paging:paging-common-ktx:3.2.1"
+
+    // Jetpack Compose Dependencies
+    def composeBom = platform('androidx.compose:compose-bom:2024.09.02')
+    implementation(composeBom)
+    androidTestImplementation(composeBom)
+
+    implementation "androidx.compose.runtime:runtime:1.5.0"
+    implementation "androidx.compose.ui:ui:1.5.0"
+    implementation "androidx.compose.foundation:foundation:1.5.0"
+    implementation "androidx.compose.foundation:foundation-layout:1.5.0"
+    implementation "androidx.compose.runtime:runtime-livedata:1.5.0"
+    implementation "androidx.compose.ui:ui-tooling:1.5.0"
+
 }

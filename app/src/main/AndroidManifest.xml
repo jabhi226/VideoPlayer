@@ -14,7 +14,7 @@
         android:name=".application.App"
         tools:targetApi="31">
         <activity
-            android:name=".modules.ui.MainActivity"
+            android:name=".features.reel.ui.MainActivity"
             android:exported="true">
             <intent-filter>
                 <action android:name="android.intent.action.MAIN" />

@@ -1,12 +1,13 @@
-package com.example.videoplayer.modules.repository
+package com.example.videoplayer.data.local.repository
 
 import android.content.Context
 import android.net.Uri
-import com.example.videoplayer.modules.models.Video
+import com.example.videoplayer.data.local.entities.Video
+import com.example.videoplayer.domain.repository.VideoListRepository
 import java.io.File
 import java.util.Date
 
-class VideoListRepositoryImpl(val context: Context) : VideoListRepository {
+class VideoListLocalRepositoryImpl(val context: Context) : VideoListRepository {
     override fun getVideos(): List<Video> {
         val list = arrayListOf<Video>()
         for (i in 1 .. 3) {

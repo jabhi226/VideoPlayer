@@ -1,4 +1,4 @@
-package com.example.videoplayer.modules.models
+package com.example.videoplayer.data.local.entities
 
 import android.net.Uri
 
