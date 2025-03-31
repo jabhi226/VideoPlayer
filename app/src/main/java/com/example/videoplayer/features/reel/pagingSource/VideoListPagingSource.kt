@@ -2,7 +2,7 @@ package com.example.videoplayer.features.reel.pagingSource
 
 import androidx.paging.PagingSource
 import androidx.paging.PagingState
-import com.example.videoplayer.data.local.entities.Video
+import com.example.videoplayer.domain.entities.Video
 import com.example.videoplayer.domain.repository.VideoListRepository
 import java.lang.Exception
 

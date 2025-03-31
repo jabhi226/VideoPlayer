@@ -1,41 +1,41 @@
 package com.example.videoplayer.features.reel.ui
 
-import android.graphics.drawable.Icon
 import android.view.LayoutInflater
 import android.view.ViewGroup
+import androidx.annotation.OptIn
 import androidx.compose.foundation.Image
 import androidx.compose.foundation.clickable
-import androidx.compose.foundation.layout.Box
 import androidx.compose.foundation.layout.Column
 import androidx.compose.foundation.layout.Spacer
 import androidx.compose.foundation.layout.fillMaxWidth
 import androidx.compose.foundation.layout.height
-import androidx.compose.foundation.layout.padding
 import androidx.compose.runtime.Composable
-import androidx.compose.runtime.DisposableEffect
+import androidx.compose.runtime.LaunchedEffect
 import androidx.compose.runtime.remember
+import androidx.compose.runtime.rememberCoroutineScope
 import androidx.compose.ui.Modifier
-import androidx.compose.ui.graphics.vector.ImageVector
-import androidx.compose.ui.input.pointer.PointerIcon
 import androidx.compose.ui.platform.LocalContext
 import androidx.compose.ui.res.painterResource
-import androidx.compose.ui.res.vectorResource
-import androidx.compose.ui.tooling.preview.Preview
 import androidx.compose.ui.unit.dp
 import androidx.compose.ui.viewinterop.AndroidView
 import androidx.databinding.DataBindingUtil
+import androidx.lifecycle.Lifecycle
+import androidx.lifecycle.compose.LocalLifecycleOwner
+import androidx.lifecycle.eventFlow
 import androidx.media3.common.MediaItem
 import androidx.media3.common.Player
 import androidx.media3.common.Player.STATE_ENDED
+import androidx.media3.common.util.UnstableApi
 import androidx.media3.exoplayer.ExoPlayer
+import androidx.media3.ui.AspectRatioFrameLayout
 import androidx.media3.ui.PlayerView
 import androidx.paging.PagingDataAdapter
 import androidx.recyclerview.widget.DiffUtil
 import androidx.recyclerview.widget.RecyclerView
 import com.example.videoplayer.R
-import com.example.videoplayer.databinding.ItemVideoBinding
-import com.example.videoplayer.data.local.entities.Video
+import com.example.videoplayer.domain.entities.Video
 import com.example.videoplayer.databinding.ItemComposeRootBinding
+import kotlinx.coroutines.launch
 
 class VideoListAdapter(private val moveToNextVideo: (Int) -> Unit) :
     PagingDataAdapter<Video, RecyclerView.ViewHolder>(object :
@@ -50,63 +50,14 @@ class VideoListAdapter(private val moveToNextVideo: (Int) -> Unit) :
 
     }) {
 
-
-    inner class VideoVH(binding: ItemVideoBinding) :
-        RecyclerView.ViewHolder(binding.root) {
-        private var player: ExoPlayer? = null
-        private var mediaItem: MediaItem? = null
-        private var isFinished = false
-
-        init {
-            if (player != null) {
-                player?.playWhenReady = true
-            } else {
-                player = ExoPlayer.Builder(binding.playerView.context).build()
-
-                player?.addListener(object : Player.Listener {
-                    override fun onPlaybackStateChanged(playbackState: Int) {
-                        if (playbackState == STATE_ENDED) {
-                            isFinished = true
-                            moveToNextVideo(
-                                absoluteAdapterPosition,
-                            )
-                        }
-                        super.onPlaybackStateChanged(playbackState)
-                    }
-                })
-                binding.playerView.player = player
-            }
-        }
-
-        fun bindData(item: Video?) {
-            item?.uri?.let {
-                mediaItem = MediaItem.fromUri(it)
-                player?.setMediaItem(mediaItem!!)
-                player?.prepare()
-                player?.playWhenReady = true
-            }
-        }
-
-        fun resumePlayer() {
-            if (isFinished) {
-                mediaItem?.let { player?.setMediaItem(it) }
-                player?.prepare()
-            }
-            player?.playWhenReady = true
-        }
-
-        fun pausePlayer() {
-            player?.playWhenReady = false
-        }
-
-    }
-
+    @OptIn(UnstableApi::class)
     @Composable
     fun MediaPlayerView(player: ExoPlayer) {
         AndroidView(
             factory = { context ->
                 PlayerView(context).apply {
                     this.player = player
+                    this.resizeMode = AspectRatioFrameLayout.RESIZE_MODE_ZOOM
                 }
             }
         )
@@ -135,32 +86,28 @@ class VideoListAdapter(private val moveToNextVideo: (Int) -> Unit) :
     }
 
     @Composable
-    fun PlayerWithController() {
-        val player: ExoPlayer = ExoPlayer.Builder(LocalContext.current).build()
+    fun PlayerWithController(player: ExoPlayer) {
         Column(
             modifier = Modifier
                 .fillMaxWidth()
-                .padding(16.dp)
         ) {
-            MediaPlayerView(player = player) // This will display the video
+            MediaPlayerView(player = player)
 
             Spacer(modifier = Modifier.height(16.dp))
 
-            CustomMediaController(player = player) // This will display custom controls
+            CustomMediaController(player = player)
         }
     }
 
-    inner class VideoVHCompose(binding: ItemComposeRootBinding) :
+    inner class VideoVHCompose(private val binding: ItemComposeRootBinding) :
         RecyclerView.ViewHolder(binding.root) {
 
         private var player: ExoPlayer? = null
         private var mediaItem: MediaItem? = null
         private var isFinished = false
 
-        init {
-
+        fun bindData(item: Video?) {
             binding.composeView.setContent {
-
                 val context = LocalContext.current
                 player = remember {
                     ExoPlayer.Builder(context).build().apply {
@@ -175,31 +122,57 @@ class VideoListAdapter(private val moveToNextVideo: (Int) -> Unit) :
                                 super.onPlaybackStateChanged(playbackState)
                             }
                         })
-                        prepare()
                     }
                 }
 
-                // Ensure player is released when the screen is destroyed
-                DisposableEffect(player) {
-                    onDispose {
-                        player?.release()
-                    }
+                item?.urlString?.let {
+                    mediaItem = MediaItem
+                        .Builder()
+                        .setUri(it)
+                        .build()
+                    player?.setMediaItem(mediaItem!!)
+                    player?.prepare()
+                    player?.playWhenReady = true
                 }
 
                 player?.let {
-                    PlayerWithController()
+                    PlayerWithController(it)
                 }
-//                    VideoItemComposable(video = video, onVideoCompleted = { onVideoCompleted(adapterPosition) })
+
+                val lifecycleOwner = LocalLifecycleOwner.current
+                val coRoutineContext = rememberCoroutineScope()
+
+                LaunchedEffect(lifecycleOwner) {
+                    coRoutineContext.launch {
+                        lifecycleOwner.lifecycle.eventFlow.collect {
+                            when (it) {
+                                Lifecycle.Event.ON_RESUME -> {
+                                    resumePlayer()
+                                }
+
+                                Lifecycle.Event.ON_PAUSE -> {
+                                    pausePlayer()
+                                }
+
+                                else -> {}
+                            }
+                        }
+                    }
+                }
+
             }
         }
 
-        fun bindData(item: Video?) {
-            item?.uri?.let {
-                mediaItem = MediaItem.fromUri(it)
-                player?.setMediaItem(mediaItem!!)
+        fun resumePlayer() {
+            if (isFinished) {
+                mediaItem?.let { player?.setMediaItem(it) }
                 player?.prepare()
-                player?.playWhenReady = true
             }
+            player?.playWhenReady = true
+        }
+
+        fun pausePlayer() {
+            player?.playWhenReady = false
         }
 
     }
@@ -210,23 +183,15 @@ class VideoListAdapter(private val moveToNextVideo: (Int) -> Unit) :
 
     override fun onViewDetachedFromWindow(holder: RecyclerView.ViewHolder) {
         super.onViewDetachedFromWindow(holder)
-//        (holder as VideoVHCompose).pausePlayer()
+        (holder as VideoVHCompose).pausePlayer()
     }
 
     override fun onViewAttachedToWindow(holder: RecyclerView.ViewHolder) {
         super.onViewAttachedToWindow(holder)
-//        (holder as VideoVHCompose).resumePlayer()
+        (holder as VideoVHCompose).resumePlayer()
     }
 
     override fun onCreateViewHolder(parent: ViewGroup, viewType: Int): RecyclerView.ViewHolder {
-//        return VideoVH(
-//            DataBindingUtil.inflate(
-//                LayoutInflater.from(parent.context),
-//                R.layout.item_video,
-//                parent,
-//                false
-//            )
-//        )
         return VideoVHCompose(
             DataBindingUtil.inflate(
                 LayoutInflater.from(parent.context),
